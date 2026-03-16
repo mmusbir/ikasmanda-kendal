@@ -1,0 +1,9 @@
+.git
+.github
+backend/.env
+backend/node_modules
+frontend/uploads/imports/*
+frontend/uploads/site-settings/*
+npm-debug.log
+yarn-error.log
+docs

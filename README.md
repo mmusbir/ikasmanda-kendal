@@ -184,6 +184,14 @@ Sebelum deploy ke server production:
 - set `CORS_ORIGIN` ke domain aplikasi
 - aktifkan reverse proxy jika tidak ingin memakai `:3000`
 
+## Deploy ke Coolify
+
+Panduan khusus deploy project ini ke Coolify tersedia di:
+
+- [docs/deploy-coolify.md](d:/Laragon/www/ikasmanda/docs/deploy-coolify.md)
+- [docs/deploy-coolify-checklist.md](d:/Laragon/www/ikasmanda/docs/deploy-coolify-checklist.md)
+- [backend/.env.production.example](d:/Laragon/www/ikasmanda/backend/.env.production.example)
+
 ## Changelog
 
 Riwayat rilis dan perubahan penting tersedia di [CHANGELOG.md](d:/Laragon/www/ikasmanda/CHANGELOG.md).
