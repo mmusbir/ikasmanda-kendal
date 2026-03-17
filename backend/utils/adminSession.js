@@ -15,7 +15,12 @@ function parseCookies(cookieHeader = '') {
     }, {});
 }
 
-function buildCookie(value, maxAgeSeconds) {
+function isSecureRequest(req) {
+  const forwardedProto = String(req?.headers?.['x-forwarded-proto'] || '').toLowerCase();
+  return req?.secure || forwardedProto === 'https';
+}
+
+function buildCookie(value, maxAgeSeconds, secure = false) {
   const parts = [
     `${COOKIE_NAME}=${encodeURIComponent(value)}`,
     'Path=/',
@@ -24,19 +29,19 @@ function buildCookie(value, maxAgeSeconds) {
     `Max-Age=${maxAgeSeconds}`,
   ];
 
-  if (process.env.NODE_ENV === 'production') {
+  if (secure) {
     parts.push('Secure');
   }
 
   return parts.join('; ');
 }
 
-function setSessionCookie(res, token, maxAgeSeconds) {
-  res.setHeader('Set-Cookie', buildCookie(token, maxAgeSeconds));
+function setSessionCookie(req, res, token, maxAgeSeconds) {
+  res.setHeader('Set-Cookie', buildCookie(token, maxAgeSeconds, isSecureRequest(req)));
 }
 
-function clearSessionCookie(res) {
-  res.setHeader('Set-Cookie', buildCookie('', 0));
+function clearSessionCookie(req, res) {
+  res.setHeader('Set-Cookie', buildCookie('', 0, isSecureRequest(req)));
 }
 
 function readSessionTokenFromRequest(req) {
@@ -47,6 +52,7 @@ function readSessionTokenFromRequest(req) {
 module.exports = {
   COOKIE_NAME,
   parseCookies,
+  isSecureRequest,
   setSessionCookie,
   clearSessionCookie,
   readSessionTokenFromRequest,

@@ -16,7 +16,7 @@ async function requireAdminAuth(req, res, next) {
     const session = await AdminModel.findSessionWithAdminByTokenHash(tokenHash);
 
     if (!session) {
-      clearSessionCookie(res);
+      clearSessionCookie(req, res);
       return res.status(401).json({
         success: false,
         message: 'Sesi tidak valid. Silakan login ulang.',
@@ -25,7 +25,7 @@ async function requireAdminAuth(req, res, next) {
 
     if (new Date(session.expires_at).getTime() <= Date.now()) {
       await AdminModel.deleteSessionByTokenHash(tokenHash);
-      clearSessionCookie(res);
+      clearSessionCookie(req, res);
       return res.status(401).json({
         success: false,
         message: 'Sesi telah berakhir. Silakan login ulang.',

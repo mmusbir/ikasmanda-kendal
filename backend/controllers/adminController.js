@@ -159,7 +159,7 @@ const adminController = {
         ipAddress: req.ip,
       });
 
-      setSessionCookie(res, rawToken, ttlSeconds);
+      setSessionCookie(req, res, rawToken, ttlSeconds);
 
       return res.json({
         success: true,
@@ -190,7 +190,7 @@ const adminController = {
         await AdminModel.deleteSessionByTokenHash(tokenHash);
       }
 
-      clearSessionCookie(res);
+      clearSessionCookie(req, res);
       return res.json({
         success: true,
         message: 'Logout berhasil',
