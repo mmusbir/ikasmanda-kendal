@@ -1,4 +1,8 @@
-﻿require('dotenv').config();
+const path = require('path');
+
+require('dotenv').config({
+  path: path.join(__dirname, '.env'),
+});
 
 const express = require('express');
 const helmet = require('helmet');
@@ -11,17 +15,18 @@ const adminRoutes = require('./routes/adminRoutes');
 const { bootstrapApp } = require('./config/bootstrap');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const DEFAULT_PORT = 3000;
+const MAX_PORT_ATTEMPTS = 10;
+const parsedPort = Number.parseInt(process.env.PORT || '', 10);
+const PORT = Number.isInteger(parsedPort) ? parsedPort : DEFAULT_PORT;
 
-const path = require('path');
-
-// â”€â”€â”€ Logger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-app.use((req, res, next) => {
+// Request logger
+app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// â”€â”€â”€ Security Middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Security middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled to allow external CDN scripts and fonts
 }));
@@ -31,7 +36,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
-// Global rate limiter â€” 100 requests per 15 minutes per IP
+// Global rate limiter: 100 requests per 15 minutes per IP
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -44,15 +49,14 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// â”€â”€â”€ Body Parser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// â”€â”€â”€ Static Frontend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Serve the frontend folder from the parent directory
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// â”€â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Routes
 app.use('/api', alumniRoutes);
 app.use('/api', usahaRoutes);
 app.use('/api', adminRoutes);
@@ -79,10 +83,10 @@ app.get('/lapak', (_req, res) => {
 
 // Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'IKA SMANDA API is running ðŸš€' });
+  res.json({ success: true, message: 'IKA SMANDA API is running' });
 });
 
-// â”€â”€â”€ 404 Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// 404 handler
 app.use((_req, res) => {
   res.status(404).json({
     success: false,
@@ -90,7 +94,7 @@ app.use((_req, res) => {
   });
 });
 
-// â”€â”€â”€ Global Error Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Global error handler
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
@@ -99,7 +103,27 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// â”€â”€â”€ Start Server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function listenOnAvailablePort(port, attemptsLeft = MAX_PORT_ATTEMPTS) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port);
+
+    server.once('listening', () => {
+      resolve({ server, port });
+    });
+
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE' && attemptsLeft > 1) {
+        const nextPort = port + 1;
+        console.log(`Port ${port} sedang dipakai. Mencoba port ${nextPort}...`);
+        resolve(listenOnAvailablePort(nextPort, attemptsLeft - 1));
+        return;
+      }
+
+      reject(err);
+    });
+  });
+}
+
 async function startServer() {
   try {
     await bootstrapApp();
@@ -108,12 +132,24 @@ async function startServer() {
     console.error('Bootstrap gagal:', err.message);
   }
 
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  try {
+    const { port } = await listenOnAvailablePort(PORT);
+    console.log(`Server running on port ${port}`);
+
+    if (port !== PORT) {
+      console.log(`Port default ${PORT} sedang dipakai, server dialihkan ke http://localhost:${port}`);
+    }
+  } catch (err) {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Gagal menemukan port kosong setelah ${MAX_PORT_ATTEMPTS} percobaan mulai dari ${PORT}.`);
+    } else {
+      console.error('Gagal menjalankan server:', err.message);
+    }
+
+    process.exit(1);
+  }
 }
 
 startServer();
 
 module.exports = app;
-

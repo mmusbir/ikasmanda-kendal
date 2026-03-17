@@ -92,7 +92,17 @@ mysql -u root -p ika_smanda < backend/config/schema.sql
 
 Jika menggunakan Laragon, Anda juga bisa import file [schema.sql](d:/Laragon/www/ikasmanda/backend/config/schema.sql) lewat HeidiSQL atau phpMyAdmin.
 
-### 4. Install dependency backend
+### 4. Install dependency
+
+Dari root project, jalankan:
+
+```powershell
+npm install
+```
+
+Perintah ini akan meneruskan instalasi ke folder `backend/`.
+
+Jika Anda ingin menjalankannya manual seperti sebelumnya, tetap bisa menggunakan:
 
 ```powershell
 cd backend
@@ -101,13 +111,26 @@ npm install
 
 ### 5. Jalankan server
 
+Dari root project, jalankan:
+
 ```powershell
+npm run dev
+```
+
+Perintah ini akan meneruskan script `dev` ke `backend/`.
+
+Jika Anda ingin menjalankannya manual dari folder backend, tetap bisa:
+
+```powershell
+cd backend
 npm run dev
 ```
 
 Server default berjalan di:
 
 - `http://localhost:3000`
+
+Jika port `3000` sedang dipakai proses lain, backend akan otomatis mencoba port berikutnya seperti `3001`, `3002`, dan seterusnya. Lihat log terminal untuk mengetahui port aktif yang dipakai.
 
 ### 6. Akses aplikasi
 
