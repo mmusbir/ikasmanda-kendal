@@ -20,14 +20,17 @@ const MAX_PORT_ATTEMPTS = 10;
 const parsedPort = Number.parseInt(process.env.PORT || '', 10);
 const PORT = Number.isInteger(parsedPort) ? parsedPort : DEFAULT_PORT;
 let bootstrapPromise = null;
+let bootstrapError = null;
 
 function ensureAppReady() {
   if (!bootstrapPromise) {
     bootstrapPromise = bootstrapApp()
       .then(() => {
+        bootstrapError = null;
         console.log('Bootstrap selesai.');
       })
       .catch((err) => {
+        bootstrapError = err;
         bootstrapPromise = null;
         throw err;
       });
@@ -69,6 +72,15 @@ app.use('/api', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Lightweight health check that does not depend on database bootstrap.
+app.get('/api/health', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'IKA SMANDA API is running',
+    ready: bootstrapError === null,
+  });
+});
+
 app.use(async (_req, _res, next) => {
   try {
     await ensureAppReady();
@@ -107,9 +119,19 @@ app.get('/lapak', (_req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/lapak.html'));
 });
 
-// Health check
-app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'IKA SMANDA API is running' });
+app.get('/api/ready', (_req, res) => {
+  if (bootstrapError) {
+    return res.status(503).json({
+      success: false,
+      message: 'Aplikasi belum siap digunakan',
+      error: bootstrapError.message,
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Aplikasi siap digunakan',
+  });
 });
 
 // 404 handler
