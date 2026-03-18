@@ -81,6 +81,21 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+app.get('/api/ready', (_req, res) => {
+  if (bootstrapError) {
+    return res.status(503).json({
+      success: false,
+      message: 'Aplikasi belum siap digunakan',
+      error: bootstrapError.message,
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Aplikasi siap digunakan',
+  });
+});
+
 app.use(async (_req, _res, next) => {
   try {
     await ensureAppReady();
@@ -117,21 +132,6 @@ app.get('/direktori', (_req, res) => {
 
 app.get('/lapak', (_req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/lapak.html'));
-});
-
-app.get('/api/ready', (_req, res) => {
-  if (bootstrapError) {
-    return res.status(503).json({
-      success: false,
-      message: 'Aplikasi belum siap digunakan',
-      error: bootstrapError.message,
-    });
-  }
-
-  res.json({
-    success: true,
-    message: 'Aplikasi siap digunakan',
-  });
 });
 
 // 404 handler
