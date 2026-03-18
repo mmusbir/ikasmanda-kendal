@@ -124,7 +124,7 @@
       </div>
 
       <div class="mt-6 hidden flex-wrap gap-2" id="activeFilterChips"></div>
-      <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" id="usahaGrid"></div>
+      <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" id="usahaGrid"></div>
       <div class="mt-6 flex flex-wrap justify-center gap-2" id="usahaPagination"></div>
     </section>
   </main>
@@ -268,7 +268,7 @@
       const grid = document.getElementById('usahaGrid');
       if (!usahaState.data.length) {
         grid.innerHTML = `
-          <div class="col-span-1 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-500 sm:col-span-2 lg:col-span-3">
+          <div class="col-span-1 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-500 sm:col-span-2 lg:col-span-4">
             <p class="text-lg font-semibold text-slate-700">Lapak tidak ditemukan</p>
             <p class="mt-2 text-sm">Ubah kata kunci atau kategori, atau daftarkan usaha baru melalui pendaftaran alumni.</p>
             <a class="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-accent transition" href="/pendaftaran">Buka Pendaftaran</a>
