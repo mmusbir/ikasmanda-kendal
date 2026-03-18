@@ -19,6 +19,35 @@
     };
   </script>
   <style>
+    body.mobile-sidebar-open {
+      overflow: hidden;
+    }
+    .admin-sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.58);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+      z-index: 30;
+    }
+    .admin-sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: min(20rem, calc(100vw - 2.5rem));
+      max-width: 20rem;
+      transform: translateX(-100%);
+      transition: transform 220ms ease;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.24);
+    }
+    .admin-shell.mobile-sidebar-open .admin-sidebar-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .admin-shell.mobile-sidebar-open .admin-sidebar {
+      transform: translateX(0);
+    }
     .menu-icon {
       display: inline-flex;
       flex-shrink: 0;
@@ -29,6 +58,21 @@
       min-width: 0;
     }
     @media (min-width: 1024px) {
+      body.mobile-sidebar-open {
+        overflow: auto;
+      }
+      .admin-sidebar-backdrop {
+        display: none;
+      }
+      .admin-sidebar {
+        position: static;
+        inset: auto;
+        z-index: auto;
+        width: auto;
+        max-width: none;
+        transform: none;
+        box-shadow: none;
+      }
       .admin-shell {
         grid-template-columns: 224px minmax(0, 1fr) !important;
       }
@@ -146,6 +190,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-900">
   <div class="admin-shell min-h-screen lg:grid lg:grid-cols-[252px_1fr]">
+    <button id="mobileSidebarBackdrop" type="button" class="admin-sidebar-backdrop lg:hidden" aria-label="Tutup menu samping"></button>
     <aside class="admin-sidebar border-r border-slate-200 bg-white">
       <div class="sticky top-0 flex h-screen flex-col">
         <div class="brand-block border-b border-slate-200 px-4 py-4">
@@ -154,6 +199,11 @@
               <img id="adminBrandImage" class="hidden h-9 w-auto rounded-md object-contain" alt="Logo admin IKA SMANDA" />
               <p id="adminBrandText" class="text-xs font-bold uppercase tracking-[0.18em] text-primary">IKA SMANDA</p>
             </div>
+            <button id="mobileSidebarCloseBtn" type="button" class="inline-flex rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50 lg:hidden" aria-label="Tutup menu">
+              <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+              </svg>
+            </button>
             <button id="sidebarToggleBtn" type="button" class="hidden rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50 lg:inline-flex" aria-label="Sembunyikan sidebar" title="Sembunyikan sidebar">
               <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
@@ -258,6 +308,20 @@
     </aside>
 
     <main class="admin-main space-y-5 p-4 sm:p-5">
+      <header class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm lg:hidden">
+        <div class="flex min-w-0 items-center gap-3">
+          <button id="mobileSidebarToggleBtn" type="button" class="inline-flex rounded-xl border border-slate-200 p-2.5 text-slate-700 transition hover:bg-slate-50" aria-label="Buka menu navigasi" aria-expanded="false">
+            <svg aria-hidden="true" class="h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-linecap="round" stroke-width="2"/>
+            </svg>
+          </button>
+          <div class="min-w-0">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Admin Panel</p>
+            <p id="mobileAdminName" class="truncate text-sm font-semibold text-slate-700">Memuat akun...</p>
+          </div>
+        </div>
+        <span id="mobileViewLabel" class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">Dashboard</span>
+      </header>
       <section id="view-dashboard" class="view-panel space-y-5">
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <article class="rounded-2xl bg-ink p-4 text-white shadow-lg"><p class="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">Total Alumni</p><p id="statAlumni" class="mt-1.5 text-2xl font-extrabold">0</p></article>
@@ -493,6 +557,7 @@
     const API_BASE = '/api';
     const state = {
       activeView: 'dashboard',
+      mobileSidebarOpen: false,
       alumniSearch: '',
       usahaSearch: '',
       lapakCategoryEditId: null,
@@ -512,6 +577,15 @@
       provinces: [],
     };
     const SETTINGS_VIEWS = ['frontpage', 'lapak-categories', 'provinces', 'admin-users'];
+    const VIEW_LABELS = {
+      dashboard: 'Dashboard',
+      alumni: 'Alumni',
+      usaha: 'Usaha',
+      frontpage: 'Halaman Depan',
+      'lapak-categories': 'Kategori Lapak',
+      provinces: 'Provinsi',
+      'admin-users': 'Pengguna Admin',
+    };
 
     function numberFormat(num) { return new Intl.NumberFormat('id-ID').format(num || 0); }
     function formatDate(value) { if (!value) return '-'; return new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); }
@@ -587,6 +661,22 @@
       if (brandText) {
         const shouldHideText = Boolean(data.logo_image_url) && Boolean(data.hide_logo_text_on_index);
         brandText.classList.toggle('hidden', shouldHideText);
+      }
+    }
+    function syncMobileViewLabel() {
+      const label = document.getElementById('mobileViewLabel');
+      if (label) {
+        label.textContent = VIEW_LABELS[state.activeView] || 'Admin Panel';
+      }
+    }
+    function setMobileSidebarOpen(open) {
+      state.mobileSidebarOpen = open;
+      const shell = document.querySelector('.admin-shell');
+      shell.classList.toggle('mobile-sidebar-open', open);
+      document.body.classList.toggle('mobile-sidebar-open', open);
+      const toggleBtn = document.getElementById('mobileSidebarToggleBtn');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
       }
     }
     function fillSiteSettingsForm(data) {
@@ -769,6 +859,7 @@
       }
     }
     function initializeSidebarState() {
+      setMobileSidebarOpen(false);
       if (window.innerWidth < 1024) return;
       setSidebarCollapsed(localStorage.getItem('adminSidebarCollapsed') === '1');
     }
@@ -878,6 +969,7 @@
       try {
         const me = await fetchJSON(`${API_BASE}/admin/me`);
         document.getElementById('adminName').textContent = me.data.admin.name;
+        document.getElementById('mobileAdminName').textContent = me.data.admin.name;
         state.currentAdminId = me.data.admin.id;
       } catch (_err) {
         window.location.href = '/admin';
@@ -949,10 +1041,14 @@
     }
     async function setView(view) {
       state.activeView = view;
+      syncMobileViewLabel();
       setActiveMenu(view);
       document.querySelectorAll('.view-panel').forEach((panel) => panel.classList.add('hidden'));
       const target = document.getElementById(`view-${view}`);
       if (target) target.classList.remove('hidden');
+      if (window.innerWidth < 1024) {
+        setMobileSidebarOpen(false);
+      }
       if (view === 'dashboard') await loadDashboard();
       if (view === 'alumni') { closeAlumniForm(); await Promise.all([loadAlumni(), loadAlumniFormOptions()]); }
       if (view === 'usaha') { closeUsahaForm(); await Promise.all([loadUsaha(), loadUsahaFormOptions()]); }
@@ -1329,6 +1425,15 @@
     }
 
     document.querySelectorAll('[data-view]').forEach((btn) => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    document.getElementById('mobileSidebarToggleBtn').addEventListener('click', () => {
+      setMobileSidebarOpen(true);
+    });
+    document.getElementById('mobileSidebarCloseBtn').addEventListener('click', () => {
+      setMobileSidebarOpen(false);
+    });
+    document.getElementById('mobileSidebarBackdrop').addEventListener('click', () => {
+      setMobileSidebarOpen(false);
+    });
     document.getElementById('sidebarToggleBtn').addEventListener('click', () => {
       if (window.innerWidth < 1024) return;
       setSidebarCollapsed(!state.sidebarCollapsed);
@@ -1422,11 +1527,19 @@
     setupPreview('logoFile', 'logoPreview');
     setupPreview('heroFile', 'heroPreview');
     initializeSidebarState();
+    syncMobileViewLabel();
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && state.mobileSidebarOpen) {
+        setMobileSidebarOpen(false);
+      }
+    });
     window.addEventListener('resize', () => {
       const shell = document.querySelector('.admin-shell');
       if (window.innerWidth < 1024) {
         shell.classList.remove('sidebar-collapsed');
+        setMobileSidebarOpen(false);
       } else {
+        setMobileSidebarOpen(false);
         shell.classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
       }
     });
