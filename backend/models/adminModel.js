@@ -101,14 +101,14 @@ const AdminModel = {
     await db.execute('DELETE FROM admin_sessions WHERE expires_at < NOW()');
   },
 
-  async getDashboardStats() {
-    const [alumniResult, usahaResult, todayAlumniResult] = await Promise.all([
-      db.execute('SELECT COUNT(*) AS total FROM alumni'),
-      db.execute('SELECT COUNT(*) AS total FROM usaha'),
-      db.execute(
-        'SELECT COUNT(*) AS total FROM alumni WHERE DATE(created_at) = CURRENT_DATE()',
-      ),
-    ]);
+    async getDashboardStats() {
+      const [alumniResult, usahaResult, todayAlumniResult] = await Promise.all([
+        db.execute('SELECT COUNT(*) AS total FROM alumni'),
+        db.execute('SELECT COUNT(*) AS total FROM usaha'),
+        db.execute(
+          'SELECT COUNT(*) AS total FROM alumni WHERE DATE(created_at) = CURRENT_DATE',
+        ),
+      ]);
     const alumniRows = alumniResult[0];
     const usahaRows = usahaResult[0];
     const todayRows = todayAlumniResult[0];
