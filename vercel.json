@@ -10,6 +10,14 @@
   },
   "rewrites": [
     {
+      "source": "/api/admin/:path*",
+      "destination": "/api/admin/[...all].js"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/[...all].js"
+    },
+    {
       "source": "/admin",
       "destination": "/frontend/admin/login.html"
     },
